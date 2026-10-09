@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>BeatSense — BPM &amp; Tempo Detector</title>
+    <meta
+      name="description"
+      content="Free online BPM tapper and tempo detector. Tap along or let your microphone find the BPM of any song."
+    />
+    <meta name="theme-color" content="#f4f4f5" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <script>
+      // Set the theme before first paint: saved toggle choice, else the device preference.
+      // Keep in sync with src/hooks/useTheme.ts.
+      (function () {
+        var t;
+        try {
+          t = localStorage.getItem("beatsense:theme");
+        } catch (e) {}
+        if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.dataset.theme = t;
+        document.querySelector('meta[name="theme-color"]').content = t === "dark" ? "#0a0a0b" : "#f4f4f5";
+      })();
+    </script>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
