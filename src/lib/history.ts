@@ -1,4 +1,6 @@
-export type HistoryEntry = { bpm: number; source: "tap" | "listen"; at: number };
+export type HistoryTrack = { title: string; artist: string; styles: string[] };
+
+export type HistoryEntry = { bpm: number; source: "tap" | "listen"; at: number; track?: HistoryTrack };
 
 const KEY = "beatsense:history";
 export const HISTORY_LIMIT = 20;

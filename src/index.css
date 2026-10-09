@@ -221,7 +221,7 @@ button:disabled {
 
 .hint {
   min-height: 1.4em;
-  margin: 12px 0 20px;
+  margin: 16px 0 24px;
   color: var(--muted);
   font-size: 15px;
   text-align: center;
@@ -260,10 +260,10 @@ kbd {
   position: relative;
   display: grid;
   place-items: center;
-  width: min(184px, 50vw);
+  width: min(232px, 62vw);
   aspect-ratio: 1;
   /* Room for the glow and the pulse ring (scales to 1.25×) so they don't crowd the text. */
-  margin: 12px 0 20px;
+  margin: 16px 0 24px;
   border: 0;
   border-radius: 50%;
   background: var(--gradient);
@@ -331,6 +331,45 @@ kbd {
 
 .listen-icon {
   font-size: 12px;
+}
+
+.listen-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.listen-row .listen-btn {
+  justify-content: center;
+  gap: 8px;
+  padding: 15px 12px;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.listen-btn.is-secondary {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: none;
+  color: var(--text);
+}
+
+.listen-btn.is-secondary .listen-icon {
+  font-size: 15px;
+}
+
+/* Small phones (e.g. iPhone SE): drop the icons so both labels fit side by side. */
+@media (max-width: 359px) {
+  .listen-row .listen-btn {
+    padding: 14px 8px;
+    font-size: 15px;
+  }
+
+  .listen-row .listen-icon {
+    display: none;
+  }
 }
 
 .listen-btn.is-active .listen-icon {
@@ -504,4 +543,290 @@ kbd {
 .debug-ticks th {
   color: var(--muted);
   font-weight: 600;
+}
+
+.history-source {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identify {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.song-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 360px;
+  min-height: 96px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+  text-align: left;
+  animation: card-in 0.25s ease-out;
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.song-card-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.song-card-body p {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.song-card-title {
+  font-weight: 700;
+}
+
+.song-card-sub {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Listening: equalizer bars whose height follows the mic level (--amp). */
+.eq {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.eq i {
+  width: 6px;
+  height: calc(12px + var(--amp, 0.5) * 32px);
+  border-radius: 3px;
+  background: var(--gradient);
+  transform-origin: center;
+  transition: height 0.4s ease-out;
+  animation: eq 0.9s ease-in-out infinite alternate;
+}
+
+.eq i:nth-child(2) {
+  animation-delay: -0.3s;
+}
+.eq i:nth-child(3) {
+  animation-delay: -0.6s;
+}
+.eq i:nth-child(4) {
+  animation-delay: -0.15s;
+}
+.eq i:nth-child(5) {
+  animation-delay: -0.45s;
+}
+
+.is-waiting .eq i {
+  animation-duration: 1.6s;
+  opacity: 0.45;
+}
+
+.is-matching .eq i,
+.is-details .eq i {
+  animation-duration: 0.5s;
+}
+
+@keyframes eq {
+  from {
+    transform: scaleY(0.3);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.eq.is-mini {
+  width: auto;
+  height: 14px;
+  gap: 2px;
+  background: none;
+}
+
+.eq.is-mini i {
+  width: 3px;
+  height: 14px;
+  background: currentColor;
+  animation-duration: 0.6s;
+}
+
+.listen-btn.is-busy:disabled {
+  opacity: 1;
+  cursor: progress;
+}
+
+.song-progress {
+  height: 4px;
+  margin-top: 8px;
+  border-radius: 2px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.song-progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gradient);
+}
+
+.song-progress .is-filling {
+  animation: fill linear forwards;
+}
+
+@keyframes fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.song-progress .is-busy {
+  width: 40%;
+  animation: busy 1.1s ease-in-out infinite;
+}
+
+@keyframes busy {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+/* No match / error */
+.song-card.is-message {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.song-card-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.is-message .song-card-sub {
+  white-space: normal;
+}
+
+.song-retry {
+  min-width: 0;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+/* Identified track */
+.track-cover {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--gradient);
+  box-shadow: 0 6px 16px -8px rgb(0 0 0 / 0.5);
+  color: var(--accent-text);
+  font-size: 26px;
+}
+
+.track-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.track-title {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.song-card-body .track-meta {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.track-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.track-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.track-tags li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.track-tags li:first-child {
+  background: var(--gradient);
+  color: var(--accent-text);
+}
+
+.track-link {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.track-link:hover {
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .song-card,
+  .eq i,
+  .song-progress .is-busy {
+    animation: none;
+  }
 }

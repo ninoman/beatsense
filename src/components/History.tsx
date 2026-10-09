@@ -24,7 +24,13 @@ export function History({ entries, onClear }: Props) {
         {entries.map((e) => (
           <li key={e.at}>
             <span className="history-bpm">{e.bpm.toFixed(1)}</span>
-            <span className="history-source">{e.source === "tap" ? "Tapped" : "Listened"}</span>
+            {e.track ? (
+              <span className="history-source" title={[e.track.title, ...e.track.styles].join(" · ")}>
+                {e.track.artist} — {e.track.title}
+              </span>
+            ) : (
+              <span className="history-source">{e.source === "tap" ? "Tapped" : "Listened"}</span>
+            )}
             <span className="history-time">{when(e.at)}</span>
           </li>
         ))}

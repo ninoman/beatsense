@@ -38,7 +38,7 @@ export default function App() {
         {mode === "tap" ? (
           <TapPanel onSave={(bpm) => history.add(bpm, "tap")} />
         ) : (
-          <ListenPanel onSave={(bpm) => history.add(bpm, "listen")} />
+          <ListenPanel onSave={(bpm, track) => history.add(bpm, "listen", track)} />
         )}
         <History entries={history.entries} onClear={history.clear} />
       </main>

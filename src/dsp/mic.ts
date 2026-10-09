@@ -12,6 +12,8 @@ const MIN_CONFIDENCE = 0.1;
 const SILENCE_RMS = 0.003;
 const MAX_RECORDING_SECONDS = 180;
 const DEBUG_TICKS = 40;
+/** Clip formats for song recognition, in order of preference (Chrome/Firefox: webm, Safari: mp4). */
+const CLIP_TYPES = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
 
 export type DebugTick = {
   /** Seconds since start. */
@@ -64,6 +66,7 @@ export class MicTempoDetector {
   private recording: number[] = [];
   private ticks: DebugTick[] = [];
   private startedAt = 0;
+  private recorders = new Set<MediaRecorder>();
 
   constructor(onUpdate: (u: MicUpdate) => void, { debug = false } = {}) {
     this.onUpdate = onUpdate;
@@ -122,8 +125,53 @@ export class MicTempoDetector {
     this.timer = window.setInterval(() => this.estimate(), ESTIMATE_EVERY_MS);
   }
 
+  /**
+   * Record `seconds` of the live mic stream (e.g. for song recognition) without interrupting tempo
+   * tracking. Several clips may record at once. Rejects if the mic stops or `signal` aborts first.
+   */
+  recordClip(seconds: number, signal?: AbortSignal): Promise<Blob> {
+    const stream = this.stream;
+    if (!stream) return Promise.reject(new MicError("Start listening first."));
+    if (signal?.aborted) return Promise.reject(new DOMException("Recording aborted.", "AbortError"));
+    if (typeof MediaRecorder === "undefined") {
+      return Promise.reject(new MicError("Recording isn't supported in this browser."));
+    }
+    const mimeType = CLIP_TYPES.find((t) => MediaRecorder.isTypeSupported(t));
+    const rec = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 128_000 });
+    this.recorders.add(rec);
+
+    return new Promise((resolve, reject) => {
+      const chunks: Blob[] = [];
+      let failed: Error | null = null;
+      const finish = () => rec.state !== "inactive" && rec.stop();
+      const timer = window.setTimeout(finish, seconds * 1000);
+      const onAbort = () => {
+        failed = new DOMException("Recording aborted.", "AbortError");
+        finish();
+      };
+      signal?.addEventListener("abort", onAbort, { once: true });
+
+      rec.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+      rec.onerror = () => {
+        failed = new MicError("Recording failed.");
+      };
+      rec.onstop = () => {
+        window.clearTimeout(timer);
+        signal?.removeEventListener("abort", onAbort);
+        this.recorders.delete(rec);
+        if (!failed && this.stream !== stream) failed = new MicError("Listening stopped.");
+        if (failed) reject(failed);
+        else resolve(new Blob(chunks, { type: rec.mimeType || mimeType || "audio/webm" }));
+      };
+      rec.start();
+    });
+  }
+
   stop(): void {
     window.clearInterval(this.timer);
+    this.recorders.forEach((r) => r.state !== "inactive" && r.stop());
     this.stream?.getTracks().forEach((t) => t.stop());
     this.stream = null;
     void this.ctx?.close();

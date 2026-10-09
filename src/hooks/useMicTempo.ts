@@ -42,7 +42,13 @@ export function useMicTempo({ debug = false } = {}) {
 
   const exportRecording = useCallback(() => last.current?.exportRecording() ?? null, []);
 
+  const recordClip = useCallback(
+    (seconds: number, signal?: AbortSignal) =>
+      detector.current?.recordClip(seconds, signal) ?? Promise.reject(new MicError("Start listening first.")),
+    [],
+  );
+
   useEffect(() => () => detector.current?.stop(), []);
 
-  return { status, error, ...update, start, stop, exportRecording };
+  return { status, error, ...update, start, stop, exportRecording, recordClip };
 }
