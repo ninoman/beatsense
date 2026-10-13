@@ -51,6 +51,24 @@ export type MicUpdate = {
 
 export class MicError extends Error {}
 
+type AudioSessionType = "auto" | "playback" | "transient" | "transient-solo" | "ambient" | "play-and-record";
+type NavigatorWithAudioSession = Navigator & { audioSession?: { type: AudioSessionType } };
+
+/**
+ * Safari 16.4+ Audio Session API. Opening the mic normally switches iOS to an exclusive
+ * play-and-record session that pauses other apps' music; "ambient" asks to mix with it instead,
+ * so we can listen to music playing from the same phone. No-op where unsupported.
+ */
+function setAudioSessionType(type: AudioSessionType): void {
+  const session = (navigator as NavigatorWithAudioSession).audioSession;
+  if (!session) return;
+  try {
+    session.type = type;
+  } catch {
+    // Unsupported type on this platform: keep the default.
+  }
+}
+
 export class MicTempoDetector {
   private ctx: AudioContext | null = null;
   private stream: MediaStream | null = null;
@@ -88,12 +106,14 @@ export class MicTempoDetector {
     if (!navigator.mediaDevices?.getUserMedia) {
       throw new MicError("Microphone access needs a secure (https) connection.");
     }
+    setAudioSessionType("ambient");
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
         // Voice processing distorts music: keep the raw signal.
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
       });
     } catch (e) {
+      setAudioSessionType("auto");
       const name = e instanceof DOMException ? e.name : "";
       if (name === "NotAllowedError") throw new MicError("Microphone permission was denied.");
       if (name === "NotFoundError") throw new MicError("No microphone found.");
@@ -176,6 +196,7 @@ export class MicTempoDetector {
     this.stream = null;
     void this.ctx?.close();
     this.ctx = null;
+    setAudioSessionType("auto");
   }
 
   private push({ onsets, rms }: { onsets: Float32Array; rms: Float32Array }): void {
